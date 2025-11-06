@@ -158,69 +158,88 @@
             const model = document.createElement('a-entity');
             
             model.setAttribute('gltf-model', `./models/${config.model}`);
-            model.setAttribute('position', '0 0 -2');
+            model.setAttribute('position', '0 -0.8 -2');
             model.setAttribute('scale', '0.1 0.1 0.1');
             
             container.appendChild(model);
             
-            // Start growth animation
+            // Start slow, smooth growth animation
             setTimeout(() => {
-                // Phase 1: Emerge and grow
+                // Phase 1: Very slow emergence from ground (like watching a plant grow)
                 model.setAttribute('animation__grow1', {
                     property: 'scale',
                     from: '0.1 0.1 0.1',
-                    to: '0.5 0.5 0.5',
-                    dur: 2000,
-                    easing: 'easeOutQuad'
+                    to: '0.35 0.35 0.35',
+                    dur: 5000,
+                    easing: 'easeInOutQuad'
                 });
                 
                 model.setAttribute('animation__rise1', {
                     property: 'position',
-                    from: '0 -0.5 -2',
-                    to: '0 0.9 -2',
-                    dur: 4000,
-                    easing: 'easeOutQuad'
+                    from: '0 -0.8 -2',
+                    to: '0 0 -2',
+                    dur: 5000,
+                    easing: 'easeInOutQuad'
                 });
                 
-                // Phase 2: Continue to human size
+                // Phase 2: Continue growing gradually
                 setTimeout(() => {
                     model.setAttribute('animation__grow2', {
                         property: 'scale',
-                        from: '0.5 0.5 0.5',
+                        from: '0.35 0.35 0.35',
                         to: '0.7 0.7 0.7',
-                        dur: 9000,
-                        easing: 'easeOutElastic'
+                        dur: 5000,
+                        easing: 'easeInOutSine'
                     });
                     
                     model.setAttribute('animation__rise2', {
                         property: 'position',
-                        from: '0 0.5 -2',
-                        to: '0 1 -2',
-                        dur: 9000,
+                        from: '0 0 -2',
+                        to: '0 0.5 -2',
+                        dur: 5000,
+                        easing: 'easeInOutSine'
+                    });
+                }, 5000);
+                
+                // Phase 3: Final growth to human size
+                setTimeout(() => {
+                    model.setAttribute('animation__grow3', {
+                        property: 'scale',
+                        from: '0.7 0.7 0.7',
+                        to: '1 1 1',
+                        dur: 4000,
                         easing: 'easeOutSine'
                     });
-                }, 3000);
+                    
+                    model.setAttribute('animation__rise3', {
+                        property: 'position',
+                        from: '0 0.5 -2',
+                        to: '0 1 -2',
+                        dur: 4000,
+                        easing: 'easeOutSine'
+                    });
+                }, 10000);
                 
-                // Phase 3: Gentle animations
+                // Phase 4: Gentle continuous animations (after fully grown)
                 setTimeout(() => {
                     model.setAttribute('animation__rotate', {
                         property: 'rotation',
                         to: '0 360 0',
-                        dur: 30000,
+                        dur: 20000,
                         loop: true,
                         easing: 'linear'
                     });
                     
                     model.setAttribute('animation__float', {
                         property: 'position.y',
-                        from: 0.8,
+                        from: 1,
                         to: 1.2,
-                        dur: 5000,
+                        dur: 4000,
                         loop: true,
                         dir: 'alternate',
                         easing: 'easeInOutSine'
                     });
-                }, 7000);
+                }, 14000);
             }, 500);
         }
     </script>
