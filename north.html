@@ -169,8 +169,8 @@
                 model.setAttribute('animation__grow1', {
                     property: 'scale',
                     from: '0.1 0.1 0.1',
-                    to: '0.35 0.35 0.35',
-                    dur: 5000,
+                    to: '0.45 0.45 0.45',
+                    dur: 2000,
                     easing: 'easeInOutQuad'
                 });
                 
@@ -186,8 +186,8 @@
                 setTimeout(() => {
                     model.setAttribute('animation__grow2', {
                         property: 'scale',
-                        from: '0.35 0.35 0.35',
-                        to: '0.7 0.7 0.7',
+                        from: '0.45 0.45 0.45',
+                        to: '0.8 0.8 0.8',
                         dur: 5000,
                         easing: 'easeInOutSine'
                     });
@@ -214,7 +214,7 @@
                     model.setAttribute('animation__rise3', {
                         property: 'position',
                         from: '0 0.5 -2',
-                        to: '0 1 -2',
+                        to: '0 0.8 -2',
                         dur: 4000,
                         easing: 'easeOutSine'
                     });
@@ -225,7 +225,7 @@
                     model.setAttribute('animation__rotate', {
                         property: 'rotation',
                         to: '0 360 0',
-                        dur: 20000,
+                        dur: 40000,
                         loop: true,
                         easing: 'linear'
                     });
@@ -233,8 +233,8 @@
                     model.setAttribute('animation__float', {
                         property: 'position.y',
                         from: 1,
-                        to: 1.2,
-                        dur: 4000,
+                        to: 1.5,
+                        dur: 5000,
                         loop: true,
                         dir: 'alternate',
                         easing: 'easeInOutSine'
