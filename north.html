@@ -10,10 +10,8 @@
         body { 
             margin: 0; 
             overflow: hidden;
-            font-family: Arial, sans-serif;
         }
         
-        /* Direction label */
         #directionLabel {
             position: fixed;
             top: 30px;
@@ -24,9 +22,10 @@
             padding: 15px 30px;
             border-radius: 20px;
             font-size: 18px;
-            z-index: 10;
+            z-index: 100;
             text-align: center;
             letter-spacing: 2px;
+            font-family: Arial, sans-serif;
         }
         
         #trigram {
@@ -34,123 +33,139 @@
             margin-top: 5px;
             opacity: 0.8;
         }
+        
+        #videoContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        #cameraVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        #canvas3d {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
     </style>
 </head>
 <body>
-    <!-- Direction Label -->
     <div id="directionLabel">
         <div id="direction">LOADING...</div>
         <div id="trigram"></div>
     </div>
     
-    <!-- AR Scene -->
-    <a-scene
-        embedded
-        arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;"
-        vr-mode-ui="enabled: false"
-        renderer="antialias: true; alpha: true">
-        
-        <a-camera 
-            position="0 1.6 0"
-            look-controls="enabled: true">
-        </a-camera>
-        
-        <!-- Model will be added here -->
-    </a-scene>
+    <div id="videoContainer">
+        <video id="cameraVideo" autoplay playsinline></video>
+    </div>
+    
+    <div id="canvas3d">
+        <a-scene
+            embedded
+            vr-mode-ui="enabled: false"
+            renderer="alpha: true;">
+            
+            <a-camera position="0 1.6 0"></a-camera>
+            
+            <!-- Model container -->
+            <a-entity id="modelContainer"></a-entity>
+        </a-scene>
+    </div>
     
     <script>
-        // Get model number from URL parameter
-        // e.g., north.html, southwest.html, etc.
         const filename = window.location.pathname.split('/').pop().replace('.html', '');
         
-        // Mapping based on 8 trigram theory (Bagua)
         const trigrams = {
             'north': { 
                 model: 'model1.glb', 
                 name: 'NORTH',
-                chinese: '☵ 坎 Water',
-                position: { x: 0, y: 0, z: -2 }
+                chinese: '☵ 坎 Water'
             },
             'southwest': { 
                 model: 'model2.glb', 
                 name: 'SOUTHWEST',
-                chinese: '☷ 坤 Earth',
-                position: { x: -1.5, y: 0, z: 1.5 }
+                chinese: '☷ 坤 Earth'
             },
             'east': { 
                 model: 'model3.glb', 
                 name: 'EAST',
-                chinese: '☳ 震 Thunder',
-                position: { x: 2, y: 0, z: 0 }
+                chinese: '☳ 震 Thunder'
             },
             'southeast': { 
                 model: 'model4.glb', 
                 name: 'SOUTHEAST',
-                chinese: '☴ 巽 Wind',
-                position: { x: 1.5, y: 0, z: 1.5 }
+                chinese: '☴ 巽 Wind'
             },
             'south': { 
                 model: 'model5.glb', 
                 name: 'SOUTH',
-                chinese: '☲ 離 Fire',
-                position: { x: 0, y: 0, z: 2 }
+                chinese: '☲ 離 Fire'
             },
             'northwest': { 
                 model: 'model6.glb', 
                 name: 'NORTHWEST',
-                chinese: '☰ 乾 Heaven',
-                position: { x: -1.5, y: 0, z: -1.5 }
+                chinese: '☰ 乾 Heaven'
             },
             'west': { 
                 model: 'model7.glb', 
                 name: 'WEST',
-                chinese: '☱ 兌 Lake',
-                position: { x: -2, y: 0, z: 0 }
+                chinese: '☱ 兌 Lake'
             },
             'northeast': { 
                 model: 'model8.glb', 
                 name: 'NORTHEAST',
-                chinese: '☶ 艮 Mountain',
-                position: { x: 1.5, y: 0, z: -1.5 }
+                chinese: '☶ 艮 Mountain'
             }
         };
         
         const config = trigrams[filename] || trigrams['north'];
         
-        // Update label
         document.getElementById('direction').textContent = config.name;
         document.getElementById('trigram').textContent = config.chinese;
         
-        // Wait for scene to load
-        const scene = document.querySelector('a-scene');
-        scene.addEventListener('loaded', () => {
-            createModel(config);
+        // Start camera
+        navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' }, 
+            audio: false 
+        })
+        .then(function(stream) {
+            const video = document.getElementById('cameraVideo');
+            video.srcObject = stream;
+            video.play();
+            
+            // Once camera starts, load model
+            setTimeout(() => {
+                createModel(config);
+            }, 1000);
+        })
+        .catch(function(err) {
+            console.error('Camera error:', err);
+            alert('Please allow camera access for AR experience');
         });
         
         function createModel(config) {
+            const container = document.getElementById('modelContainer');
             const model = document.createElement('a-entity');
-            const pos = config.position;
             
             model.setAttribute('gltf-model', `./models/${config.model}`);
-            
-            // Start position: on ground, in front of user
-            model.setAttribute('position', `${pos.x} -0.5 ${pos.z}`);
+            model.setAttribute('position', '0 0 -2');
             model.setAttribute('scale', '0.01 0.01 0.01');
-            model.setAttribute('rotation', '0 0 0');
             
-            scene.appendChild(model);
+            container.appendChild(model);
             
-            // Slow growth animation to human size
+            // Start growth animation
             setTimeout(() => {
-                // Phase 1: Emerge from ground (like mycelium breaking through)
-                model.setAttribute('animation__emerge', {
-                    property: 'position',
-                    from: `${pos.x} -0.5 ${pos.z}`,
-                    to: `${pos.x} 0 ${pos.z}`,
-                    dur: 3000,
-                    easing: 'easeOutQuad'
-                });
-                
+                // Phase 1: Emerge and grow
                 model.setAttribute('animation__grow1', {
                     property: 'scale',
                     from: '0.01 0.01 0.01',
@@ -159,26 +174,34 @@
                     easing: 'easeOutQuad'
                 });
                 
-                // Phase 2: Continue growing to human size
+                model.setAttribute('animation__rise1', {
+                    property: 'position',
+                    from: '0 -0.5 -2',
+                    to: '0 0.5 -2',
+                    dur: 3000,
+                    easing: 'easeOutQuad'
+                });
+                
+                // Phase 2: Continue to human size
                 setTimeout(() => {
                     model.setAttribute('animation__grow2', {
                         property: 'scale',
                         from: '0.5 0.5 0.5',
-                        to: '1.5 1.5 1.5',
+                        to: '1 1 1',
                         dur: 4000,
                         easing: 'easeOutElastic'
                     });
                     
-                    model.setAttribute('animation__rise', {
+                    model.setAttribute('animation__rise2', {
                         property: 'position',
-                        from: `${pos.x} 0 ${pos.z}`,
-                        to: `${pos.x} 0.8 ${pos.z}`,
+                        from: '0 0.5 -2',
+                        to: '0 1 -2',
                         dur: 4000,
                         easing: 'easeOutSine'
                     });
                 }, 3000);
                 
-                // Phase 3: Gentle animations (after reaching full size)
+                // Phase 3: Gentle animations
                 setTimeout(() => {
                     model.setAttribute('animation__rotate', {
                         property: 'rotation',
@@ -190,8 +213,8 @@
                     
                     model.setAttribute('animation__float', {
                         property: 'position.y',
-                        from: 0.8,
-                        to: 1.0,
+                        from: 1,
+                        to: 1.2,
                         dur: 4000,
                         loop: true,
                         dir: 'alternate',
