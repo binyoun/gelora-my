@@ -162,6 +162,7 @@
             model.setAttribute('scale', '0.1 0.1 0.1');
             
             container.appendChild(model);
+            setModelReference(model);
             
             // Start slow, smooth growth animation
             setTimeout(() => {
@@ -241,6 +242,48 @@
                     });
                 }, 14000);
             }, 500);
+        }
+
+                // Pinch to zoom
+        let currentZoom = -2;
+        const minZoom = -4;
+        const maxZoom = -0.5;
+        let modelEntity = null;
+        
+        function setModelReference(model) {
+            modelEntity = model;
+        }
+        
+        let touchStartDistance = 0;
+        let lastTouchDistance = 0;
+        
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                touchStartDistance = getDistance(e.touches[0], e.touches[1]);
+                lastTouchDistance = touchStartDistance;
+            }
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && modelEntity) {
+                e.preventDefault();
+                const currentDistance = getDistance(e.touches[0], e.touches[1]);
+                const delta = currentDistance - lastTouchDistance;
+                if (Math.abs(delta) > 5) {
+                    currentZoom += delta > 0 ? 0.02 : -0.02;
+                    if (currentZoom > maxZoom) currentZoom = maxZoom;
+                    if (currentZoom < minZoom) currentZoom = minZoom;
+                    const currentPos = modelEntity.getAttribute('position');
+                    modelEntity.setAttribute('position', `${currentPos.x} ${currentPos.y} ${currentZoom}`);
+                    lastTouchDistance = currentDistance;
+                }
+            }
+        });
+        
+        function getDistance(touch1, touch2) {
+            const dx = touch1.clientX - touch2.clientX;
+            const dy = touch1.clientY - touch2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
         }
     </script>
 </body>
