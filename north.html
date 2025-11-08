@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mycelium Network</title>
+    <title>Gelora Mycelium Network</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     
@@ -146,7 +146,7 @@
             // Once camera starts, load model
             setTimeout(() => {
                 createModel(config);
-            }, 1000);
+            }, 1200);
         })
         .catch(function(err) {
             console.error('Camera error:', err);
@@ -189,7 +189,7 @@
                         property: 'scale',
                         from: '0.45 0.45 0.45',
                         to: '0.8 0.8 0.8',
-                        dur: 5000,
+                        dur: 6000,
                         easing: 'easeInOutSine'
                     });
                     
@@ -208,7 +208,7 @@
                         property: 'scale',
                         from: '0.8 0.8 0.8',
                         to: '1 1 1',
-                        dur: 4000,
+                        dur: 5000,
                         easing: 'easeOutSine'
                     });
                     
@@ -216,7 +216,7 @@
                         property: 'position',
                         from: '0 0.5 -2',
                         to: '0 0.8 0',
-                        dur: 6000,
+                        dur: 8000,
                         easing: 'easeOutSine'
                     });
                 }, 10000);
