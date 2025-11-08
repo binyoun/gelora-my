@@ -240,7 +240,7 @@
                 
                 model.setAttribute('animation__float', {
                     property: 'position.y',
-                    from: 0.5,
+                    from: 0.3,
                     to: 1.5,
                     dur: 9500,
                     loop: true,
@@ -256,7 +256,7 @@
 
         let currentZoom = 0;
         const minZoom = -3;
-        const maxZoom = 1.5;
+        const maxZoom = 1.2;
         let modelEntity = null;
 
         function setModelReference(model) {
@@ -315,8 +315,8 @@
                     
                     modelEntity.setAttribute('animation__float', {
                         property: 'position.y',
-                        from: currentPos.y,
-                        to: currentPos.y + 0.4,
+                        from: currentPos.y - 0.5,
+                        to: currentPos.y + 0.3,
                         dur: 5000,
                         loop: true,
                         dir: 'alternate',
