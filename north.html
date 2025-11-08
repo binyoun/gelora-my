@@ -257,12 +257,10 @@
         let touchStartDistance = 0;
         let lastTouchDistance = 0;
         
-        document.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 2) {
-        // Get ACTUAL z-position dynamically
-        if (modelEntity) {
-            const pos = modelEntity.getAttribute('position');
-            currentZoom = pos.z; // ← FIXED!
+    document.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                touchStartDistance = getDistance(e.touches[0], e.touches[1]);
+                lastTouchDistance = touchStartDistance;
             }
         });
         
