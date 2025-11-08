@@ -159,7 +159,7 @@
             
             model.setAttribute('gltf-model', `./models/${config.model}`);
             model.setAttribute('position', '0 -0.8 -2');
-            model.setAttribute('scale', '0.1 0.1 0.1');
+            model.setAttribute('scale', '0.2 0.2 0.2');
             
             container.appendChild(model);
             setModelReference(model);
@@ -169,7 +169,7 @@
                 // Phase 1: Very slow emergence from ground (like watching a plant grow)
                 model.setAttribute('animation__grow1', {
                     property: 'scale',
-                    from: '0.1 0.1 0.1',
+                    from: '0.2 0.2 0.2',
                     to: '0.45 0.45 0.45',
                     dur: 4000,
                     easing: 'easeInOutQuad'
@@ -216,7 +216,7 @@
                         property: 'position',
                         from: '0 0.5 -2',
                         to: '0 0.8 0',
-                        dur: 4000,
+                        dur: 6000,
                         easing: 'easeOutSine'
                     });
                 }, 10000);
