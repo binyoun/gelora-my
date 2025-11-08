@@ -163,7 +163,6 @@
             model.setAttribute('visible', true);
             
             container.appendChild(model);
-            setModelReference(model);
             
             // Wait for model to FULLY LOAD before starting animation
             model.addEventListener('model-loaded', () => {
@@ -190,7 +189,7 @@
                 easing: 'easeInOutQuad'
             });
             
-            // Phase 2: Continue growing gradually
+            // Phase 2: Continue growing gradually WITH GENTLE PULSING
             setTimeout(() => {
                 model.setAttribute('animation__grow2', {
                     property: 'scale',
@@ -207,10 +206,24 @@
                     dur: 5000,
                     easing: 'easeInOutSine'
                 });
+                
+                // Add gentle pulsing (breathing effect)
+                model.setAttribute('animation__pulse2', {
+                    property: 'scale',
+                    from: '0.45 0.45 0.45',
+                    to: '0.48 0.48 0.48',
+                    dur: 2000,
+                    loop: true,
+                    dir: 'alternate',
+                    easing: 'easeInOutSine'
+                });
             }, 5000);
             
-            // Phase 3: Final growth to human size
+            // Phase 3: Final growth to human size WITH GENTLE PULSING
             setTimeout(() => {
+                // Remove Phase 2 pulsing
+                model.removeAttribute('animation__pulse2');
+                
                 model.setAttribute('animation__grow3', {
                     property: 'scale',
                     from: '0.8 0.8 0.8',
@@ -226,10 +239,24 @@
                     dur: 9000,
                     easing: 'easeOutSine'
                 });
+                
+                // Add gentle pulsing (breathing effect)
+                model.setAttribute('animation__pulse3', {
+                    property: 'scale',
+                    from: '0.8 0.8 0.8',
+                    to: '0.85 0.85 0.85',
+                    dur: 3000,
+                    loop: true,
+                    dir: 'alternate',
+                    easing: 'easeInOutSine'
+                });
             }, 10000);
             
             // Phase 4: Gentle continuous animations (after fully grown)
             setTimeout(() => {
+                // Remove Phase 3 pulsing
+                model.removeAttribute('animation__pulse3');
+                
                 model.setAttribute('animation__rotate', {
                     property: 'rotation',
                     to: '0 360 0',
@@ -247,89 +274,7 @@
                     dir: 'alternate',
                     easing: 'easeInOutSine'
                 });
-            }, 20000);  // 5000 + 5000 + 9000 = 19000
-        }
-
-        // ===================================
-        // PINCH TO ZOOM (WORKING VERSION)
-        // ===================================
-
-        let currentZoom = 0;
-        const minZoom = -3;
-        const maxZoom = 1.2;
-        let modelEntity = null;
-
-        function setModelReference(model) {
-            modelEntity = model;
-        }
-
-        let touchStartDistance = 0;
-        let lastTouchDistance = 0;
-        let isPinching = false;
-
-        document.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 2) {
-                isPinching = true;
-                
-                if (modelEntity) {
-                    const pos = modelEntity.getAttribute('position');
-                    currentZoom = pos.z;
-                    
-                    // Pause floating animation during pinch
-                    modelEntity.removeAttribute('animation__float');
-                }
-                
-                touchStartDistance = getDistance(e.touches[0], e.touches[1]);
-                lastTouchDistance = touchStartDistance;
-            }
-        });
-
-        document.addEventListener('touchmove', (e) => {
-            if (e.touches.length === 2 && modelEntity && isPinching) {
-                e.preventDefault();
-                
-                const currentDistance = getDistance(e.touches[0], e.touches[1]);
-                const delta = currentDistance - lastTouchDistance;
-                
-                if (Math.abs(delta) > 3) {
-                    currentZoom += delta > 0 ? 0.04 : -0.04;
-                    
-                    if (currentZoom > maxZoom) currentZoom = maxZoom;
-                    if (currentZoom < minZoom) currentZoom = minZoom;
-                    
-                    const currentPos = modelEntity.getAttribute('position');
-                    modelEntity.setAttribute('position', `${currentPos.x} ${currentPos.y} ${currentZoom}`);
-                    
-                    lastTouchDistance = currentDistance;
-                }
-            }
-        });
-
-        document.addEventListener('touchend', (e) => {
-            if (e.touches.length < 2 && isPinching) {
-                isPinching = false;
-                
-                // Resume floating animation after pinch
-                if (modelEntity) {
-                    const currentPos = modelEntity.getAttribute('position');
-                    
-                    modelEntity.setAttribute('animation__float', {
-                        property: 'position.y',
-                        from: currentPos.y - 0.8,
-                        to: currentPos.y + 0.3,
-                        dur: 5000,
-                        loop: true,
-                        dir: 'alternate',
-                        easing: 'easeInOutSine'
-                    });
-                }
-            }
-        });
-
-        function getDistance(touch1, touch2) {
-            const dx = touch1.clientX - touch2.clientX;
-            const dy = touch1.clientY - touch2.clientY;
-            return Math.sqrt(dx * dx + dy * dy);
+            }, 19000);
         }
     </script>
 </body>
