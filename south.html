@@ -33,6 +33,7 @@
             margin-top: 5px;
             opacity: 0.8;
         }
+        
         /* Loading seed indicator with mycelium threads */
         #loadingSeed {
             position: fixed;
@@ -42,6 +43,12 @@
             width: 100px;
             height: 100px;
             z-index: 50;
+            pointer-events: none;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        #loadingSeed.hidden {
+            opacity: 0;
             pointer-events: none;
         }
         
@@ -66,7 +73,7 @@
             top: 50%;
             left: 50%;
             transform-origin: center;
-            height: 2px;
+            height: 1px;
             background: linear-gradient(90deg, 
                 rgba(255, 255, 255, 0.6), 
                 transparent);
@@ -101,12 +108,6 @@
                 width: 60px;
                 opacity: 0.8;
             }
-        }
-        
-        #loadingSeed.hidden {
-            opacity: 0;
-            transition: opacity 0.5s ease-out;
-            pointer-events: none;
         }
 
         /* Navigation buttons */
@@ -182,8 +183,18 @@
         <div id="trigram"></div>
     </div>
 
-    <!-- Loading seed indicator -->
-    <div id="loadingSeed"></div>
+    <!-- Loading seed indicator with mycelium threads -->
+    <div id="loadingSeed">
+        <div class="seed-core"></div>
+        <div class="mycelium-thread thread-1"></div>
+        <div class="mycelium-thread thread-2"></div>
+        <div class="mycelium-thread thread-3"></div>
+        <div class="mycelium-thread thread-4"></div>
+        <div class="mycelium-thread thread-5"></div>
+        <div class="mycelium-thread thread-6"></div>
+        <div class="mycelium-thread thread-7"></div>
+        <div class="mycelium-thread thread-8"></div>
+    </div>
 
     <!-- Navigation buttons -->
     <div id="navButtons">
@@ -327,7 +338,14 @@
             // Wait for model to FULLY LOAD before starting animation
             model.addEventListener('model-loaded', () => {
                 console.log('Model loaded, starting animation NOW');
-                startGrowthAnimation(model);
+                // Hide the loading seed when model is loaded
+                const loadingSeed = document.getElementById('loadingSeed');
+                loadingSeed.classList.add('hidden');
+                
+                // Start the growth animation after a brief delay
+                setTimeout(() => {
+                    startGrowthAnimation(model);
+                }, 100);
             });
         }
 
