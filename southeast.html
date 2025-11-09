@@ -397,20 +397,36 @@
             const elevationFeet = coords.altitude ? Math.round(coords.altitude * 3.28084) : 0;
             document.getElementById('elevationValue').textContent = `${elevationFeet} ft Elevation`;
             
-            // Reverse geocoding for location name
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`)
+            // Reverse geocoding for location name - use zoom 18 for street-level accuracy
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18`)
                 .then(response => response.json())
                 .then(data => {
-                    // Extract city and state/region
+                    // Extract location with priority for specific area names
                     const address = data.address || {};
-                    const city = address.city || address.town || address.village || address.suburb || '';
-                    const state = address.state || address.region || address.county || '';
+                    
+                    // Priority order for location name (Cyberjaya might be in suburb or city_district)
+                    const city = address.suburb || 
+                                address.city_district || 
+                                address.neighbourhood || 
+                                address.city || 
+                                address.town || 
+                                address.village || 
+                                address.municipality || '';
+                    
+                    const state = address.state || address.region || '';
                     
                     let locationText = '';
                     if (city && state) {
                         locationText = `${city}, ${state}`;
                     } else if (city || state) {
                         locationText = city || state;
+                    }
+                    
+                    // Special case for known areas (optional manual override)
+                    if (lat >= 2.9 && lat <= 3.0 && lon >= 101.6 && lon <= 101.7) {
+                        // Cyberjaya coordinates range
+                        locationText = locationText.includes('Sepang') ? 
+                            locationText.replace('Sepang', 'Cyberjaya') : locationText;
                     }
                     
                     document.getElementById('locationValue').textContent = locationText;
