@@ -33,7 +33,82 @@
             margin-top: 5px;
             opacity: 0.8;
         }
+        /* Loading seed indicator with mycelium threads */
+        #loadingSeed {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            z-index: 50;
+            pointer-events: none;
+        }
         
+        .seed-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, 
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(255, 255, 255, 0.6) 30%,
+                rgba(255, 255, 255, 0.2) 60%,
+                transparent 100%);
+            border-radius: 50%;
+            animation: seedPulse 2s ease-in-out infinite;
+        }
+        
+        .mycelium-thread {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: center;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.6), 
+                transparent);
+        }
+        
+        .thread-1 { transform: translate(-50%, -50%) rotate(0deg); animation: threadGrow 2s ease-in-out infinite; }
+        .thread-2 { transform: translate(-50%, -50%) rotate(45deg); animation: threadGrow 2s ease-in-out infinite 0.25s; }
+        .thread-3 { transform: translate(-50%, -50%) rotate(90deg); animation: threadGrow 2s ease-in-out infinite 0.5s; }
+        .thread-4 { transform: translate(-50%, -50%) rotate(135deg); animation: threadGrow 2s ease-in-out infinite 0.75s; }
+        .thread-5 { transform: translate(-50%, -50%) rotate(180deg); animation: threadGrow 2s ease-in-out infinite 1s; }
+        .thread-6 { transform: translate(-50%, -50%) rotate(225deg); animation: threadGrow 2s ease-in-out infinite 1.25s; }
+        .thread-7 { transform: translate(-50%, -50%) rotate(270deg); animation: threadGrow 2s ease-in-out infinite 1.5s; }
+        .thread-8 { transform: translate(-50%, -50%) rotate(315deg); animation: threadGrow 2s ease-in-out infinite 1.75s; }
+        
+        @keyframes seedPulse {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes threadGrow {
+            0%, 100% {
+                width: 30px;
+                opacity: 0.3;
+            }
+            50% {
+                width: 60px;
+                opacity: 0.8;
+            }
+        }
+        
+        #loadingSeed.hidden {
+            opacity: 0;
+            transition: opacity 0.5s ease-out;
+            pointer-events: none;
+        }
+
         /* Navigation buttons */
         #navButtons {
             position: fixed;
