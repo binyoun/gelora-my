@@ -42,7 +42,8 @@
             width: 100%;
             display: flex;
             justify-content: space-between;
-            padding: 0 30px;
+            padding: 0 20px;
+            box-sizing: border-box;
             z-index: 100;
             pointer-events: none;
         }
@@ -66,6 +67,7 @@
             transition: all 0.3s;
             font-family: Arial, sans-serif;
             text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            flex-shrink: 0;
         }
         
         .nav-btn:active {
@@ -324,7 +326,7 @@
                 model.setAttribute('animation__pulse3', {
                     property: 'scale',
                     from: '0.8 0.8 0.8',
-                    to: '0.95 0.95 0.85',
+                    to: '0.95 0.95 0.95',
                     dur: 5000,
                     loop: true,
                     dir: 'alternate',
