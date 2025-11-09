@@ -73,7 +73,7 @@
             top: 50%;
             left: 50%;
             transform-origin: center;
-            height: 1px;
+            height: 2px;
             background: linear-gradient(90deg, 
                 rgba(255, 255, 255, 0.6), 
                 transparent);
@@ -175,6 +175,21 @@
             height: 100%;
             z-index: 2;
         }
+        
+        /* Compass and location data display - iPhone style */
+        #compassData {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 13px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            z-index: 100;
+            text-align: center;
+            white-space: nowrap;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body>
@@ -200,6 +215,11 @@
     <div id="navButtons">
         <button class="nav-btn" id="leftBtn"></button>
         <button class="nav-btn" id="rightBtn"></button>
+    </div>
+    
+    <!-- Compass and location data -->
+    <div id="compassData">
+        <span id="coordinates">---</span> <span id="locationValue">---</span> <span id="elevationValue">--- ft Elevation</span>
     </div>
     
     <div id="videoContainer">
@@ -314,6 +334,9 @@
             video.srcObject = stream;
             video.play();
             
+            // Initialize compass and location data
+            initCompassAndLocation();
+            
             // Once camera starts, load model
             setTimeout(() => {
                 createModel(config);
@@ -324,6 +347,87 @@
             alert('Please allow camera access for AR experience');
         });
 
+        // Initialize compass and geolocation
+        function initCompassAndLocation() {
+            // Initialize geolocation
+            if (navigator.geolocation) {
+                // Get initial position
+                navigator.geolocation.getCurrentPosition(
+                    handlePosition,
+                    handleLocationError,
+                    { enableHighAccuracy: true }
+                );
+                
+                // Watch position for updates
+                navigator.geolocation.watchPosition(
+                    handlePosition,
+                    handleLocationError,
+                    { enableHighAccuracy: true, maximumAge: 30000, timeout: 27000 }
+                );
+            }
+        }
+        
+        // Convert decimal degrees to DMS (degrees, minutes, seconds) format
+        function toDMS(decimal, isLat) {
+            const absolute = Math.abs(decimal);
+            const degrees = Math.floor(absolute);
+            const minutesDecimal = (absolute - degrees) * 60;
+            const minutes = Math.floor(minutesDecimal);
+            const seconds = Math.round((minutesDecimal - minutes) * 60);
+            
+            const direction = isLat ? 
+                (decimal >= 0 ? 'N' : 'S') : 
+                (decimal >= 0 ? 'E' : 'W');
+            
+            return `${degrees}°${minutes}'${seconds}"${direction}`;
+        }
+        
+        // Handle geolocation position
+        function handlePosition(position) {
+            const coords = position.coords;
+            const lat = coords.latitude;
+            const lon = coords.longitude;
+            
+            // Format coordinates like iPhone compass: 2°55'35"N 101°38'33"E
+            const latDMS = toDMS(lat, true);
+            const lonDMS = toDMS(lon, false);
+            document.getElementById('coordinates').textContent = `${latDMS} ${lonDMS}`;
+            
+            // Convert altitude from meters to feet (1 meter = 3.28084 feet)
+            const elevationFeet = coords.altitude ? Math.round(coords.altitude * 3.28084) : 0;
+            document.getElementById('elevationValue').textContent = `${elevationFeet} ft Elevation`;
+            
+            // Reverse geocoding for location name
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`)
+                .then(response => response.json())
+                .then(data => {
+                    // Extract city and state/region
+                    const address = data.address || {};
+                    const city = address.city || address.town || address.village || address.suburb || '';
+                    const state = address.state || address.region || address.county || '';
+                    
+                    let locationText = '';
+                    if (city && state) {
+                        locationText = `${city}, ${state}`;
+                    } else if (city || state) {
+                        locationText = city || state;
+                    }
+                    
+                    document.getElementById('locationValue').textContent = locationText;
+                })
+                .catch(err => {
+                    document.getElementById('locationValue').textContent = '';
+                });
+        }
+        
+        // Handle location errors
+        function handleLocationError(error) {
+            console.warn('Location error:', error);
+            document.getElementById('coordinates').textContent = '---';
+            document.getElementById('locationValue').textContent = '';
+            document.getElementById('elevationValue').textContent = '--- ft Elevation';
+        }
+        
         function createModel(config) {
             const container = document.getElementById('modelContainer');
             const model = document.createElement('a-entity');
