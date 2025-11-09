@@ -34,6 +34,124 @@
             opacity: 0.8;
         }
         
+        /* Loading seed indicator with mycelium threads */
+        #loadingSeed {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            z-index: 50;
+            pointer-events: none;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        #loadingSeed.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .seed-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, 
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(255, 255, 255, 0.6) 30%,
+                rgba(255, 255, 255, 0.2) 60%,
+                transparent 100%);
+            border-radius: 50%;
+            animation: seedPulse 2s ease-in-out infinite;
+        }
+        
+        .mycelium-thread {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: center;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.6), 
+                transparent);
+        }
+        
+        .thread-1 { transform: translate(-50%, -50%) rotate(0deg); animation: threadGrow 2s ease-in-out infinite; }
+        .thread-2 { transform: translate(-50%, -50%) rotate(45deg); animation: threadGrow 2s ease-in-out infinite 0.25s; }
+        .thread-3 { transform: translate(-50%, -50%) rotate(90deg); animation: threadGrow 2s ease-in-out infinite 0.5s; }
+        .thread-4 { transform: translate(-50%, -50%) rotate(135deg); animation: threadGrow 2s ease-in-out infinite 0.75s; }
+        .thread-5 { transform: translate(-50%, -50%) rotate(180deg); animation: threadGrow 2s ease-in-out infinite 1s; }
+        .thread-6 { transform: translate(-50%, -50%) rotate(225deg); animation: threadGrow 2s ease-in-out infinite 1.25s; }
+        .thread-7 { transform: translate(-50%, -50%) rotate(270deg); animation: threadGrow 2s ease-in-out infinite 1.5s; }
+        .thread-8 { transform: translate(-50%, -50%) rotate(315deg); animation: threadGrow 2s ease-in-out infinite 1.75s; }
+        
+        @keyframes seedPulse {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes threadGrow {
+            0%, 100% {
+                width: 30px;
+                opacity: 0.3;
+            }
+            50% {
+                width: 60px;
+                opacity: 0.8;
+            }
+        }
+
+        /* Navigation buttons */
+        #navButtons {
+            position: fixed;
+            top: 100px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        .nav-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            background: transparent;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            pointer-events: all;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.2;
+            transition: all 0.3s;
+            font-family: Arial, sans-serif;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            flex-shrink: 0;
+        }
+        
+        .nav-btn:active {
+            transform: scale(0.9);
+            border-color: rgba(255, 255, 255, 1);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
         #videoContainer {
             position: fixed;
             top: 0;
@@ -63,6 +181,25 @@
     <div id="directionLabel">
         <div id="direction">LOADING...</div>
         <div id="trigram"></div>
+    </div>
+
+    <!-- Loading seed indicator with mycelium threads -->
+    <div id="loadingSeed">
+        <div class="seed-core"></div>
+        <div class="mycelium-thread thread-1"></div>
+        <div class="mycelium-thread thread-2"></div>
+        <div class="mycelium-thread thread-3"></div>
+        <div class="mycelium-thread thread-4"></div>
+        <div class="mycelium-thread thread-5"></div>
+        <div class="mycelium-thread thread-6"></div>
+        <div class="mycelium-thread thread-7"></div>
+        <div class="mycelium-thread thread-8"></div>
+    </div>
+
+    <!-- Navigation buttons -->
+    <div id="navButtons">
+        <button class="nav-btn" id="leftBtn"></button>
+        <button class="nav-btn" id="rightBtn"></button>
     </div>
     
     <div id="videoContainer">
@@ -128,10 +265,44 @@
             }
         };
         
+        // Navigation connections (mycelium network pattern - circular)
+        const navigation = {
+            'north': { left: 'northwest', right: 'northeast' },
+            'northeast': { left: 'north', right: 'east' },
+            'east': { left: 'northeast', right: 'southeast' },
+            'southeast': { left: 'east', right: 'south' },
+            'south': { left: 'southeast', right: 'southwest' },
+            'southwest': { left: 'south', right: 'west' },
+            'west': { left: 'southwest', right: 'northwest' },
+            'northwest': { left: 'west', right: 'north' }
+        };
+        
         const config = trigrams[filename] || trigrams['north'];
         
         document.getElementById('direction').textContent = config.name;
         document.getElementById('trigram').textContent = config.chinese;
+        
+        // Set up navigation buttons
+        const currentDirection = filename || 'north';
+        const nav = navigation[currentDirection];
+        
+        if (nav) {
+            // Left button
+            const leftBtn = document.getElementById('leftBtn');
+            const leftConfig = trigrams[nav.left];
+            leftBtn.textContent = leftConfig.name.replace('NORTH', 'N').replace('SOUTH', 'S').replace('EAST', 'E').replace('WEST', 'W');
+            leftBtn.addEventListener('click', () => {
+                window.location.href = nav.left + '.html';
+            });
+            
+            // Right button
+            const rightBtn = document.getElementById('rightBtn');
+            const rightConfig = trigrams[nav.right];
+            rightBtn.textContent = rightConfig.name.replace('NORTH', 'N').replace('SOUTH', 'S').replace('EAST', 'E').replace('WEST', 'W');
+            rightBtn.addEventListener('click', () => {
+                window.location.href = nav.right + '.html';
+            });
+        }
         
         // Start camera
         navigator.mediaDevices.getUserMedia({ 
@@ -163,12 +334,18 @@
             model.setAttribute('visible', true);
             
             container.appendChild(model);
-            setModelReference(model);
             
             // Wait for model to FULLY LOAD before starting animation
             model.addEventListener('model-loaded', () => {
                 console.log('Model loaded, starting animation NOW');
-                startGrowthAnimation(model);
+                // Hide the loading seed when model is loaded
+                const loadingSeed = document.getElementById('loadingSeed');
+                loadingSeed.classList.add('hidden');
+                
+                // Start the growth animation after a brief delay
+                setTimeout(() => {
+                    startGrowthAnimation(model);
+                }, 100);
             });
         }
 
@@ -190,7 +367,7 @@
                 easing: 'easeInOutQuad'
             });
             
-            // Phase 2: Continue growing gradually
+            // Phase 2: Continue growing gradually WITH GENTLE PULSING
             setTimeout(() => {
                 model.setAttribute('animation__grow2', {
                     property: 'scale',
@@ -207,10 +384,24 @@
                     dur: 5000,
                     easing: 'easeInOutSine'
                 });
-            }, 5000);
+                
+                // Add gentle pulsing (breathing effect)
+                model.setAttribute('animation__pulse2', {
+                    property: 'scale',
+                    from: '0.4 0.4 0.4',
+                    to: '0.48 0.48 0.48',
+                    dur: 2000,
+                    loop: true,
+                    dir: 'alternate',
+                    easing: 'easeInOutSine'
+                });
+            }, 7000);
             
-            // Phase 3: Final growth to human size
+            // Phase 3: Final growth to human size WITH GENTLE PULSING
             setTimeout(() => {
+                // Remove Phase 2 pulsing
+                model.removeAttribute('animation__pulse2');
+                
                 model.setAttribute('animation__grow3', {
                     property: 'scale',
                     from: '0.8 0.8 0.8',
@@ -226,10 +417,24 @@
                     dur: 9000,
                     easing: 'easeOutSine'
                 });
-            }, 10000);
+                
+                // Add gentle pulsing (breathing effect)
+                model.setAttribute('animation__pulse3', {
+                    property: 'scale',
+                    from: '0.8 0.8 0.8',
+                    to: '0.95 0.95 0.95',
+                    dur: 2000,
+                    loop: true,
+                    dir: 'alternate',
+                    easing: 'easeInOutSine'
+                });
+            }, 13000);
             
             // Phase 4: Gentle continuous animations (after fully grown)
             setTimeout(() => {
+                // Remove Phase 3 pulsing
+                model.removeAttribute('animation__pulse3');
+                
                 model.setAttribute('animation__rotate', {
                     property: 'rotation',
                     to: '0 360 0',
@@ -247,89 +452,7 @@
                     dir: 'alternate',
                     easing: 'easeInOutSine'
                 });
-            }, 20000);  // 5000 + 5000 + 9000 = 19000
-        }
-
-        // ===================================
-        // PINCH TO ZOOM (WORKING VERSION)
-        // ===================================
-
-        let currentZoom = 0;
-        const minZoom = -3;
-        const maxZoom = 1.2;
-        let modelEntity = null;
-
-        function setModelReference(model) {
-            modelEntity = model;
-        }
-
-        let touchStartDistance = 0;
-        let lastTouchDistance = 0;
-        let isPinching = false;
-
-        document.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 2) {
-                isPinching = true;
-                
-                if (modelEntity) {
-                    const pos = modelEntity.getAttribute('position');
-                    currentZoom = pos.z;
-                    
-                    // Pause floating animation during pinch
-                    modelEntity.removeAttribute('animation__float');
-                }
-                
-                touchStartDistance = getDistance(e.touches[0], e.touches[1]);
-                lastTouchDistance = touchStartDistance;
-            }
-        });
-
-        document.addEventListener('touchmove', (e) => {
-            if (e.touches.length === 2 && modelEntity && isPinching) {
-                e.preventDefault();
-                
-                const currentDistance = getDistance(e.touches[0], e.touches[1]);
-                const delta = currentDistance - lastTouchDistance;
-                
-                if (Math.abs(delta) > 3) {
-                    currentZoom += delta > 0 ? 0.04 : -0.04;
-                    
-                    if (currentZoom > maxZoom) currentZoom = maxZoom;
-                    if (currentZoom < minZoom) currentZoom = minZoom;
-                    
-                    const currentPos = modelEntity.getAttribute('position');
-                    modelEntity.setAttribute('position', `${currentPos.x} ${currentPos.y} ${currentZoom}`);
-                    
-                    lastTouchDistance = currentDistance;
-                }
-            }
-        });
-
-        document.addEventListener('touchend', (e) => {
-            if (e.touches.length < 2 && isPinching) {
-                isPinching = false;
-                
-                // Resume floating animation after pinch
-                if (modelEntity) {
-                    const currentPos = modelEntity.getAttribute('position');
-                    
-                    modelEntity.setAttribute('animation__float', {
-                        property: 'position.y',
-                        from: currentPos.y - 0.8,
-                        to: currentPos.y + 0.3,
-                        dur: 5000,
-                        loop: true,
-                        dir: 'alternate',
-                        easing: 'easeInOutSine'
-                    });
-                }
-            }
-        });
-
-        function getDistance(touch1, touch2) {
-            const dx = touch1.clientX - touch2.clientX;
-            const dy = touch1.clientY - touch2.clientY;
-            return Math.sqrt(dx * dx + dy * dy);
+            }, 22000);
         }
     </script>
 </body>
