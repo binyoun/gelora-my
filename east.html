@@ -475,7 +475,7 @@
                 property: 'scale',
                 from: '0.1 0.1 0.1',
                 to: '0.45 0.45 0.45',
-                dur: 4000,
+                dur: 3000,
                 easing: 'easeInOutQuad'
             });
             
@@ -483,7 +483,7 @@
                 property: 'position',
                 from: '0 -0.8 -2',
                 to: '0 0 -2',
-                dur: 5000,
+                dur: 3000,
                 easing: 'easeInOutQuad'
             });
             
@@ -493,7 +493,7 @@
                     property: 'scale',
                     from: '0.45 0.45 0.45',
                     to: '0.8 0.8 0.8',
-                    dur: 5000,
+                    dur: 4000,
                     easing: 'easeInOutSine'
                 });
                 
@@ -501,7 +501,7 @@
                     property: 'position',
                     from: '0 0 -2',
                     to: '0 0.5 -2',
-                    dur: 5000,
+                    dur: 4000,
                     easing: 'easeInOutSine'
                 });
                 
@@ -515,7 +515,7 @@
                     dir: 'alternate',
                     easing: 'easeInOutSine'
                 });
-            }, 7000);
+            }, 5000);
             
             // Phase 3: Final growth to human size WITH GENTLE PULSING
             setTimeout(() => {
@@ -526,7 +526,7 @@
                     property: 'scale',
                     from: '0.8 0.8 0.8',
                     to: '1 1 1',
-                    dur: 6000,
+                    dur: 4000,
                     easing: 'easeOutSine'
                 });
                 
@@ -534,7 +534,7 @@
                     property: 'position',
                     from: '0 0.5 -2',
                     to: '0 0.8 0',
-                    dur: 9000,
+                    dur: 6000,
                     easing: 'easeOutSine'
                 });
                 
@@ -548,7 +548,7 @@
                     dir: 'alternate',
                     easing: 'easeInOutSine'
                 });
-            }, 13000);
+            }, 11000);
             
             // Phase 4: Gentle continuous animations (after fully grown)
             setTimeout(() => {
