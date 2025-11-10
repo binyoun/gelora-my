@@ -145,16 +145,19 @@
             text-shadow: 0 0 5px rgba(0,0,0,0.8);
             flex-shrink: 0;
             animation: navPulse 3s ease-in-out infinite;
+            position: relative;
         }
         
         @keyframes navPulse {
             0%, 100% {
                 transform: scale(1);
-                opacity: 0.8;
+                border-color: rgba(255, 255, 255, 0.6);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
             }
             50% {
                 transform: scale(1.05);
-                opacity: 1;
+                border-color: rgba(255, 255, 255, 1);
+                box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.4);
             }
         }
         
@@ -162,42 +165,6 @@
             transform: scale(0.9);
             border-color: rgba(255, 255, 255, 1);
             background: rgba(255, 255, 255, 0.2);
-        }
-        
-        /* Connection lines between top elements */
-        .connection-line {
-            position: fixed;
-            height: 2px;
-            background: linear-gradient(90deg, 
-                transparent 0%, 
-                rgba(255, 255, 255, 0.6) 20%, 
-                rgba(255, 255, 255, 0.6) 80%, 
-                transparent 100%);
-            z-index: 99;
-            animation: connectionPulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes connectionPulse {
-            0%, 100% {
-                opacity: 0.3;
-                transform: scaleY(1);
-            }
-            50% {
-                opacity: 0.8;
-                transform: scaleY(1.5);
-            }
-        }
-        
-        #leftConnection {
-            top: 65px;
-            left: 80px;
-            width: calc(50% - 160px);
-        }
-        
-        #rightConnection {
-            top: 65px;
-            right: 80px;
-            width: calc(50% - 160px);
         }
         
         #videoContainer {
@@ -276,8 +243,7 @@
     </div>
     
     <!-- Connection lines between top elements -->
-    <div class="connection-line" id="leftConnection"></div>
-    <div class="connection-line" id="rightConnection"></div>
+    <canvas id="connectionCanvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 150px; z-index: 99; pointer-events: none;"></canvas>
     
     <!-- Compass and location data (two lines) -->
     <div id="compassData">
@@ -309,42 +275,42 @@
             'north': { 
                 model: 'model2.glb', 
                 name: 'NORTH',
-                chinese: '☵ 坎 Water'
+                chinese: '☵ 坎 water'
             },
             'southwest': { 
                 model: 'model1.glb', 
                 name: 'SOUTHWEST',
-                chinese: '☷ 坤 Earth'
+                chinese: '☷ 坤 earth'
             },
             'east': { 
                 model: 'model7.glb', 
                 name: 'EAST',
-                chinese: '☳ 震 Thunder'
+                chinese: '☳ 震 thunder'
             },
             'southeast': { 
                 model: 'model8.glb', 
                 name: 'SOUTHEAST',
-                chinese: '☴ 巽 Wind'
+                chinese: '☴ 巽 wind'
             },
             'south': { 
                 model: 'model3.glb', 
                 name: 'SOUTH',
-                chinese: '☲ 離 Fire'
+                chinese: '☲ 離 fire'
             },
             'northwest': { 
                 model: 'model4.glb', 
                 name: 'NORTHWEST',
-                chinese: '☰ 乾 Heaven'
+                chinese: '☰ 乾 heaven'
             },
             'west': { 
                 model: 'model5.glb', 
                 name: 'WEST',
-                chinese: '☱ 兌 Lake'
+                chinese: '☱ 兌 lake'
             },
             'northeast': { 
                 model: 'model6.glb', 
                 name: 'NORTHEAST',
-                chinese: '☶ 艮 Mountain'
+                chinese: '☶ 艮 mountain'
             }
         };
         
@@ -400,6 +366,9 @@
             // Initialize compass and location data
             initCompassAndLocation();
             
+            // Draw connection lines
+            drawConnectionLines();
+            
             // Once camera starts, load model
             setTimeout(() => {
                 createModel(config);
@@ -409,6 +378,62 @@
             console.error('Camera error:', err);
             alert('Please allow camera access for AR experience');
         });
+
+        // Draw animated connection lines between top elements
+        function drawConnectionLines() {
+            const canvas = document.getElementById('connectionCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = 150;
+            
+            let pulseAlpha = 0;
+            let pulseDirection = 1;
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Update pulse alpha
+                pulseAlpha += pulseDirection * 0.02;
+                if (pulseAlpha >= 0.9 || pulseAlpha <= 0.3) {
+                    pulseDirection *= -1;
+                }
+                
+                // Get element positions
+                const leftBtn = document.getElementById('leftBtn').getBoundingClientRect();
+                const rightBtn = document.getElementById('rightBtn').getBoundingClientRect();
+                const centerLabel = document.getElementById('directionLabel').getBoundingClientRect();
+                
+                // Calculate connection points
+                const leftBtnCenter = leftBtn.left + leftBtn.width / 2;
+                const rightBtnCenter = rightBtn.left + rightBtn.width / 2;
+                const centerLabelCenter = centerLabel.left + centerLabel.width / 2;
+                const lineY = 60;
+                
+                // Draw left connection (left button to center label)
+                ctx.strokeStyle = `rgba(255, 255, 255, ${pulseAlpha})`;
+                ctx.lineWidth = 2 + (pulseAlpha - 0.3);
+                ctx.beginPath();
+                ctx.moveTo(leftBtnCenter + 30, lineY);
+                ctx.lineTo(centerLabelCenter - centerLabel.width / 2 - 10, lineY);
+                ctx.stroke();
+                
+                // Draw right connection (center label to right button)
+                ctx.beginPath();
+                ctx.moveTo(centerLabelCenter + centerLabel.width / 2 + 10, lineY);
+                ctx.lineTo(rightBtnCenter - 30, lineY);
+                ctx.stroke();
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+            
+            // Redraw on window resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = 150;
+            });
+        }
 
         // Initialize compass and geolocation
         function initCompassAndLocation() {
@@ -538,7 +563,7 @@
                 property: 'scale',
                 from: '0.1 0.1 0.1',
                 to: '0.45 0.45 0.45',
-                dur: 3000,
+                dur: 4000,
                 easing: 'easeInOutQuad'
             });
             
@@ -546,7 +571,7 @@
                 property: 'position',
                 from: '0 -0.8 -2',
                 to: '0 0 -2',
-                dur: 4000,
+                dur: 5000,
                 easing: 'easeInOutQuad'
             });
             
