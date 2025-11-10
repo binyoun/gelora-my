@@ -73,7 +73,7 @@
             top: 50%;
             left: 50%;
             transform-origin: center;
-            height: 1px;
+            height: 2px;
             background: linear-gradient(90deg, 
                 rgba(255, 255, 255, 0.6), 
                 transparent);
@@ -144,12 +144,60 @@
             font-family: Arial, sans-serif;
             text-shadow: 0 0 5px rgba(0,0,0,0.8);
             flex-shrink: 0;
+            animation: navPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes navPulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
         }
         
         .nav-btn:active {
             transform: scale(0.9);
             border-color: rgba(255, 255, 255, 1);
             background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Connection lines between top elements */
+        .connection-line {
+            position: fixed;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.6) 20%, 
+                rgba(255, 255, 255, 0.6) 80%, 
+                transparent 100%);
+            z-index: 99;
+            animation: connectionPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes connectionPulse {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scaleY(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scaleY(1.5);
+            }
+        }
+        
+        #leftConnection {
+            top: 65px;
+            left: 80px;
+            width: calc(50% - 160px);
+        }
+        
+        #rightConnection {
+            top: 65px;
+            right: 80px;
+            width: calc(50% - 160px);
         }
         
         #videoContainer {
@@ -187,8 +235,18 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             z-index: 100;
             text-align: center;
-            white-space: nowrap;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            line-height: 1.5;
+        }
+        
+        #elevationLine {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        #locationLine {
+            display: block;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -217,9 +275,14 @@
         <button class="nav-btn" id="rightBtn"></button>
     </div>
     
-    <!-- Compass and location data -->
+    <!-- Connection lines between top elements -->
+    <div class="connection-line" id="leftConnection"></div>
+    <div class="connection-line" id="rightConnection"></div>
+    
+    <!-- Compass and location data (two lines) -->
     <div id="compassData">
-        <span id="coordinates">---</span> <span id="locationValue">---</span> <span id="elevationValue">--- ft Elevation</span>
+        <span id="elevationLine"><span id="elevationValue">--- m Elevation</span></span>
+        <span id="locationLine"><span id="coordinates">---</span> <span id="locationValue">---</span></span>
     </div>
     
     <div id="videoContainer">
@@ -393,9 +456,9 @@
             const lonDMS = toDMS(lon, false);
             document.getElementById('coordinates').textContent = `${latDMS} ${lonDMS}`;
             
-            // Convert altitude from meters to feet (1 meter = 3.28084 feet)
-            const elevationFeet = coords.altitude ? Math.round(coords.altitude * 3.28084) : 0;
-            document.getElementById('elevationValue').textContent = `${elevationFeet} ft Elevation`;
+            // Keep altitude in meters (no conversion needed)
+            const elevationMeters = coords.altitude ? Math.round(coords.altitude) : 0;
+            document.getElementById('elevationValue').textContent = `${elevationMeters} m Elevation`;
             
             // Reverse geocoding for location name - use zoom 18 for street-level accuracy
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18`)
@@ -441,7 +504,7 @@
             console.warn('Location error:', error);
             document.getElementById('coordinates').textContent = '---';
             document.getElementById('locationValue').textContent = '';
-            document.getElementById('elevationValue').textContent = '--- ft Elevation';
+            document.getElementById('elevationValue').textContent = '--- m Elevation';
         }
         
         function createModel(config) {
@@ -483,8 +546,17 @@
                 property: 'position',
                 from: '0 -0.8 -2',
                 to: '0 0 -2',
-                dur: 3000,
+                dur: 4000,
                 easing: 'easeInOutQuad'
+            });
+            
+            // Start rotation from the beginning (Phase 1)
+            model.setAttribute('animation__rotate', {
+                property: 'rotation',
+                to: '0 360 0',
+                dur: 40000,
+                loop: true,
+                easing: 'linear'
             });
             
             // Phase 2: Continue growing gradually WITH GENTLE PULSING
@@ -493,7 +565,7 @@
                     property: 'scale',
                     from: '0.45 0.45 0.45',
                     to: '0.8 0.8 0.8',
-                    dur: 3000,
+                    dur: 4000,
                     easing: 'easeInOutSine'
                 });
                 
@@ -501,7 +573,7 @@
                     property: 'position',
                     from: '0 0 -2',
                     to: '0 0.5 -2',
-                    dur: 3000,
+                    dur: 4000,
                     easing: 'easeInOutSine'
                 });
                 
@@ -515,7 +587,7 @@
                     dir: 'alternate',
                     easing: 'easeInOutSine'
                 });
-            }, 3000);
+            }, 4000);
             
             // Phase 3: Final growth to human size WITH GENTLE PULSING
             setTimeout(() => {
@@ -526,7 +598,7 @@
                     property: 'scale',
                     from: '0.8 0.8 0.8',
                     to: '1 1 1',
-                    dur: 4000,
+                    dur: 3000,
                     easing: 'easeOutSine'
                 });
                 
@@ -534,7 +606,7 @@
                     property: 'position',
                     from: '0 0.5 -2',
                     to: '0 0.8 0',
-                    dur: 4000,
+                    dur: 5000,
                     easing: 'easeOutSine'
                 });
                 
@@ -548,21 +620,15 @@
                     dir: 'alternate',
                     easing: 'easeInOutSine'
                 });
-            }, 7000);
+            }, 9000);
             
             // Phase 4: Gentle continuous animations (after fully grown)
             setTimeout(() => {
                 // Remove Phase 3 pulsing
                 model.removeAttribute('animation__pulse3');
                 
-                model.setAttribute('animation__rotate', {
-                    property: 'rotation',
-                    to: '0 360 0',
-                    dur: 40000,
-                    loop: true,
-                    easing: 'linear'
-                });
-                
+                // Rotation continues from Phase 1
+                // Add floating animation
                 model.setAttribute('animation__float', {
                     property: 'position',
                     from: '0 0.1 0.3',
@@ -572,7 +638,7 @@
                     dir: 'alternate',
                     easing: 'easeInOutSine'
                 });
-            }, 17000);
+            }, 19000);
         }
     </script>
 </body>
