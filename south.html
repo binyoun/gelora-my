@@ -21,7 +21,7 @@
             color: white;
             padding: 15px 30px;
             border-radius: 20px;
-            font-size: 18px;
+            font-size: 16px;
             z-index: 100;
             text-align: center;
             letter-spacing: 2px;
@@ -128,7 +128,7 @@
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.8);
             background: transparent;
             color: white;
             font-size: 12px;
@@ -144,6 +144,21 @@
             font-family: Arial, sans-serif;
             text-shadow: 0 0 5px rgba(0,0,0,0.8);
             flex-shrink: 0;
+            animation: navPulse 3s ease-in-out infinite;
+            position: relative;
+        }
+        
+        @keyframes navPulse {
+            0%, 100% {
+                transform: scale(1);
+                border-color: rgba(255, 255, 255, 0.6);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+            50% {
+                transform: scale(1.05);
+                border-color: rgba(255, 255, 255, 1);
+                box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.4);
+            }
         }
         
         .nav-btn:active {
@@ -176,6 +191,17 @@
             z-index: 2;
         }
         
+        /* Mycelium Network Canvas - top 25% of screen */
+        #connectionCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 25vh;
+            z-index: 99;
+            pointer-events: none;
+        }
+        
         /* Compass and location data display - iPhone style */
         #compassData {
             position: fixed;
@@ -187,8 +213,18 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             z-index: 100;
             text-align: center;
-            white-space: nowrap;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            line-height: 1.5;
+        }
+        
+        #elevationLine {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        #locationLine {
+            display: block;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -217,9 +253,13 @@
         <button class="nav-btn" id="rightBtn"></button>
     </div>
     
-    <!-- Compass and location data -->
+    <!-- Mycelium Network Canvas - shows all 7 connections -->
+    <canvas id="connectionCanvas"></canvas>
+    
+    <!-- Compass and location data (two lines) -->
     <div id="compassData">
-        <span id="coordinates">---</span> <span id="locationValue">---</span> <span id="elevationValue">--- ft Elevation</span>
+        <span id="elevationLine"><span id="elevationValue">--- m Elevation</span></span>
+        <span id="locationLine"><span id="coordinates">---</span> <span id="locationValue">---</span></span>
     </div>
     
     <div id="videoContainer">
@@ -246,42 +286,42 @@
             'north': { 
                 model: 'model2.glb', 
                 name: 'NORTH',
-                chinese: '☵ 坎 Water'
+                chinese: '☵ 坎'
             },
             'southwest': { 
                 model: 'model1.glb', 
                 name: 'SOUTHWEST',
-                chinese: '☷ 坤 Earth'
+                chinese: '☷ 坤 earth'
             },
             'east': { 
                 model: 'model7.glb', 
                 name: 'EAST',
-                chinese: '☳ 震 Thunder'
+                chinese: '☳ 震'
             },
             'southeast': { 
                 model: 'model8.glb', 
                 name: 'SOUTHEAST',
-                chinese: '☴ 巽 Wind'
+                chinese: '☴ 巽'
             },
             'south': { 
                 model: 'model3.glb', 
                 name: 'SOUTH',
-                chinese: '☲ 離 Fire'
+                chinese: '☲ 離'
             },
             'northwest': { 
                 model: 'model4.glb', 
                 name: 'NORTHWEST',
-                chinese: '☰ 乾 Heaven'
+                chinese: '☰ 乾'
             },
             'west': { 
                 model: 'model5.glb', 
                 name: 'WEST',
-                chinese: '☱ 兌 Lake'
+                chinese: '☱ 兌'
             },
             'northeast': { 
                 model: 'model6.glb', 
                 name: 'NORTHEAST',
-                chinese: '☶ 艮 Mountain'
+                chinese: '☶ 艮'
             }
         };
         
@@ -296,6 +336,9 @@
             'west': { left: 'southwest', right: 'northwest' },
             'northwest': { left: 'west', right: 'north' }
         };
+        
+        // All 8 directions for mycelium network visualization
+        const allDirections = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
         
         const config = trigrams[filename] || trigrams['north'];
         
@@ -337,6 +380,9 @@
             // Initialize compass and location data
             initCompassAndLocation();
             
+            // Draw mycelium network connection lines
+            drawMyceliumNetwork();
+            
             // Once camera starts, load model
             setTimeout(() => {
                 createModel(config);
@@ -346,6 +392,129 @@
             console.error('Camera error:', err);
             alert('Please allow camera access for AR experience');
         });
+
+        // Draw mycelium network - showing all 7 connections from current trigram
+        function drawMyceliumNetwork() {
+            const canvas = document.getElementById('connectionCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size to match viewport
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight * 0.25; // 25% of viewport height
+            }
+            resizeCanvas();
+            
+            // Pulse animation variables
+            let pulsePhase = 0;
+            const pulseSpeed = 0.02;
+            
+            // Layout positions for all 8 trigrams in a circular pattern
+            // Current trigram is at center, others are arranged in circle
+            function getTrigramPositions() {
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const radius = Math.min(canvas.width, canvas.height) * 0.5;
+                
+                const positions = {};
+                const currentIndex = allDirections.indexOf(currentDirection);
+                
+                // Current trigram at center
+                positions[currentDirection] = { x: centerX, y: centerY };
+                
+                // Other 7 trigrams in a circle
+                allDirections.forEach((dir, idx) => {
+                    if (dir !== currentDirection) {
+                        // Calculate angle for circular arrangement
+                        // Offset by current direction so they're positioned naturally
+                        const relativeIdx = (idx - currentIndex + 8) % 8;
+                        const angle = (relativeIdx * Math.PI * 2 / 8) - Math.PI / 2; // Start from top
+                        
+                        positions[dir] = {
+                            x: centerX + Math.cos(angle) * radius,
+                            y: centerY + Math.sin(angle) * radius
+                        };
+                    }
+                });
+                
+                return positions;
+            }
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Update pulse phase
+                pulsePhase += pulseSpeed;
+                
+                // Get current positions
+                const positions = getTrigramPositions();
+                const centerPos = positions[currentDirection];
+                
+                // Draw lines from center to all 7 other trigrams
+                allDirections.forEach((dir, idx) => {
+                    if (dir !== currentDirection) {
+                        const targetPos = positions[dir];
+                        
+                        // Calculate pulse alpha with phase offset for each line
+                        const phaseOffset = idx * Math.PI / 4;
+                        const pulse = Math.sin(pulsePhase + phaseOffset);
+                        const alpha = 0.3 + (pulse + 1) / 2 * 0.5; // Range: 0.3 to 0.8
+                        const lineWidth = 1 + (pulse + 1) / 2 * 1.5; // Range: 1 to 2.5
+                        
+                        // Draw connection line
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                        ctx.lineWidth = lineWidth;
+                        ctx.beginPath();
+                        ctx.moveTo(centerPos.x, centerPos.y);
+                        ctx.lineTo(targetPos.x, targetPos.y);
+                        ctx.stroke();
+                        
+                        // Draw endpoint glow
+                        const glowSize = 3 + pulse * 2;
+                        const gradient = ctx.createRadialGradient(
+                            targetPos.x, targetPos.y, 0,
+                            targetPos.x, targetPos.y, glowSize
+                        );
+                        gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.8})`);
+                        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(targetPos.x, targetPos.y, glowSize, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                     
+                    }
+                });
+                
+                // Draw center node (current trigram) with stronger glow
+                const centerPulse = Math.sin(pulsePhase * 1.5);
+                const centerAlpha = 0.6 + (centerPulse + 1) / 2 * 0.3;
+                const centerSize = 8 + centerPulse * 3;
+                
+                const centerGradient = ctx.createRadialGradient(
+                    centerPos.x, centerPos.y, 0,
+                    centerPos.x, centerPos.y, centerSize
+                );
+                centerGradient.addColorStop(0, `rgba(255, 255, 255, ${centerAlpha})`);
+                centerGradient.addColorStop(0.5, `rgba(255, 255, 255, ${centerAlpha * 0.5})`);
+                centerGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = centerGradient;
+                ctx.beginPath();
+                ctx.arc(centerPos.x, centerPos.y, centerSize, 0, Math.PI * 2);
+                ctx.fill();
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+            
+            // Redraw on window resize
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+            });
+        }
 
         // Initialize compass and geolocation
         function initCompassAndLocation() {
@@ -393,9 +562,9 @@
             const lonDMS = toDMS(lon, false);
             document.getElementById('coordinates').textContent = `${latDMS} ${lonDMS}`;
             
-            // Convert altitude from meters to feet (1 meter = 3.28084 feet)
-            const elevationFeet = coords.altitude ? Math.round(coords.altitude * 3.28084) : 0;
-            document.getElementById('elevationValue').textContent = `${elevationFeet} ft Elevation`;
+            // Keep altitude in meters (no conversion needed)
+            const elevationMeters = coords.altitude ? Math.round(coords.altitude) : 0;
+            document.getElementById('elevationValue').textContent = `${elevationMeters} m Elevation`;
             
             // Reverse geocoding for location name - use zoom 18 for street-level accuracy
             fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18`)
@@ -441,7 +610,7 @@
             console.warn('Location error:', error);
             document.getElementById('coordinates').textContent = '---';
             document.getElementById('locationValue').textContent = '';
-            document.getElementById('elevationValue').textContent = '--- ft Elevation';
+            document.getElementById('elevationValue').textContent = '--- m Elevation';
         }
         
         function createModel(config) {
@@ -487,13 +656,22 @@
                 easing: 'easeInOutQuad'
             });
             
+            // Start rotation from the beginning (Phase 1)
+            model.setAttribute('animation__rotate', {
+                property: 'rotation',
+                to: '0 360 0',
+                dur: 40000,
+                loop: true,
+                easing: 'linear'
+            });
+            
             // Phase 2: Continue growing gradually WITH GENTLE PULSING
             setTimeout(() => {
                 model.setAttribute('animation__grow2', {
                     property: 'scale',
                     from: '0.45 0.45 0.45',
                     to: '0.8 0.8 0.8',
-                    dur: 5000,
+                    dur: 4000,
                     easing: 'easeInOutSine'
                 });
                 
@@ -501,7 +679,7 @@
                     property: 'position',
                     from: '0 0 -2',
                     to: '0 0.5 -2',
-                    dur: 5000,
+                    dur: 4000,
                     easing: 'easeInOutSine'
                 });
                 
@@ -515,7 +693,7 @@
                     dir: 'alternate',
                     easing: 'easeInOutSine'
                 });
-            }, 7000);
+            }, 4000);
             
             // Phase 3: Final growth to human size WITH GENTLE PULSING
             setTimeout(() => {
@@ -526,7 +704,7 @@
                     property: 'scale',
                     from: '0.8 0.8 0.8',
                     to: '1 1 1',
-                    dur: 6000,
+                    dur: 3000,
                     easing: 'easeOutSine'
                 });
                 
@@ -534,7 +712,7 @@
                     property: 'position',
                     from: '0 0.5 -2',
                     to: '0 0.8 0',
-                    dur: 9000,
+                    dur: 5000,
                     easing: 'easeOutSine'
                 });
                 
@@ -548,21 +726,15 @@
                     dir: 'alternate',
                     easing: 'easeInOutSine'
                 });
-            }, 13000);
+            }, 9000);
             
             // Phase 4: Gentle continuous animations (after fully grown)
             setTimeout(() => {
                 // Remove Phase 3 pulsing
                 model.removeAttribute('animation__pulse3');
                 
-                model.setAttribute('animation__rotate', {
-                    property: 'rotation',
-                    to: '0 360 0',
-                    dur: 40000,
-                    loop: true,
-                    easing: 'linear'
-                });
-                
+                // Rotation continues from Phase 1
+                // Add floating animation
                 model.setAttribute('animation__float', {
                     property: 'position',
                     from: '0 0.1 0.3',
@@ -572,7 +744,7 @@
                     dir: 'alternate',
                     easing: 'easeInOutSine'
                 });
-            }, 22000);
+            }, 19000);
         }
     </script>
 </body>
