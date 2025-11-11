@@ -21,7 +21,7 @@
             color: white;
             padding: 15px 30px;
             border-radius: 20px;
-            font-size: 18px;
+            font-size: 16px;
             z-index: 100;
             text-align: center;
             letter-spacing: 2px;
@@ -128,7 +128,7 @@
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.8);
             background: transparent;
             color: white;
             font-size: 12px;
@@ -286,7 +286,7 @@
             'north': { 
                 model: 'model2.glb', 
                 name: 'NORTH',
-                chinese: '☵ 坎 water'
+                chinese: '☵ 坎'
             },
             'southwest': { 
                 model: 'model1.glb', 
@@ -296,32 +296,32 @@
             'east': { 
                 model: 'model7.glb', 
                 name: 'EAST',
-                chinese: '☳ 震 thunder'
+                chinese: '☳ 震'
             },
             'southeast': { 
                 model: 'model8.glb', 
                 name: 'SOUTHEAST',
-                chinese: '☴ 巽 wind'
+                chinese: '☴ 巽'
             },
             'south': { 
                 model: 'model3.glb', 
                 name: 'SOUTH',
-                chinese: '☲ 離 fire'
+                chinese: '☲ 離'
             },
             'northwest': { 
                 model: 'model4.glb', 
                 name: 'NORTHWEST',
-                chinese: '☰ 乾 heaven'
+                chinese: '☰ 乾'
             },
             'west': { 
                 model: 'model5.glb', 
                 name: 'WEST',
-                chinese: '☱ 兌 lake'
+                chinese: '☱ 兌'
             },
             'northeast': { 
                 model: 'model6.glb', 
                 name: 'NORTHEAST',
-                chinese: '☶ 艮 mountain'
+                chinese: '☶ 艮'
             }
         };
         
@@ -414,7 +414,7 @@
             function getTrigramPositions() {
                 const centerX = canvas.width / 2;
                 const centerY = canvas.height / 2;
-                const radius = Math.min(canvas.width, canvas.height) * 0.35;
+                const radius = Math.min(canvas.width, canvas.height) * 0.5;
                 
                 const positions = {};
                 const currentIndex = allDirections.indexOf(currentDirection);
@@ -483,13 +483,7 @@
                         ctx.arc(targetPos.x, targetPos.y, glowSize, 0, Math.PI * 2);
                         ctx.fill();
                         
-                        // Draw small label for connected trigram
-                        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.7})`;
-                        ctx.font = '10px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        const shortName = trigrams[dir].name.replace('NORTH', 'N').replace('SOUTH', 'S').replace('EAST', 'E').replace('WEST', 'W');
-                        ctx.fillText(shortName, targetPos.x, targetPos.y - 12);
+                     
                     }
                 });
                 
