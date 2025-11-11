@@ -191,6 +191,17 @@
             z-index: 2;
         }
         
+        /* Mycelium Network Canvas - top 25% of screen */
+        #connectionCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 25vh;
+            z-index: 99;
+            pointer-events: none;
+        }
+        
         /* Compass and location data display - iPhone style */
         #compassData {
             position: fixed;
@@ -242,8 +253,8 @@
         <button class="nav-btn" id="rightBtn"></button>
     </div>
     
-    <!-- Connection lines between top elements -->
-    <canvas id="connectionCanvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 150px; z-index: 99; pointer-events: none;"></canvas>
+    <!-- Mycelium Network Canvas - shows all 7 connections -->
+    <canvas id="connectionCanvas"></canvas>
     
     <!-- Compass and location data (two lines) -->
     <div id="compassData">
@@ -326,6 +337,9 @@
             'northwest': { left: 'west', right: 'north' }
         };
         
+        // All 8 directions for mycelium network visualization
+        const allDirections = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'];
+        
         const config = trigrams[filename] || trigrams['north'];
         
         document.getElementById('direction').textContent = config.name;
@@ -366,8 +380,8 @@
             // Initialize compass and location data
             initCompassAndLocation();
             
-            // Draw connection lines
-            drawConnectionLines();
+            // Draw mycelium network connection lines
+            drawMyceliumNetwork();
             
             // Once camera starts, load model
             setTimeout(() => {
@@ -379,49 +393,123 @@
             alert('Please allow camera access for AR experience');
         });
 
-        // Draw animated connection lines between top elements
-        function drawConnectionLines() {
+        // Draw mycelium network - showing all 7 connections from current trigram
+        function drawMyceliumNetwork() {
             const canvas = document.getElementById('connectionCanvas');
             const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = 150;
             
-            let pulseAlpha = 0;
-            let pulseDirection = 1;
+            // Set canvas size to match viewport
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight * 0.25; // 25% of viewport height
+            }
+            resizeCanvas();
+            
+            // Pulse animation variables
+            let pulsePhase = 0;
+            const pulseSpeed = 0.02;
+            
+            // Layout positions for all 8 trigrams in a circular pattern
+            // Current trigram is at center, others are arranged in circle
+            function getTrigramPositions() {
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const radius = Math.min(canvas.width, canvas.height) * 0.35;
+                
+                const positions = {};
+                const currentIndex = allDirections.indexOf(currentDirection);
+                
+                // Current trigram at center
+                positions[currentDirection] = { x: centerX, y: centerY };
+                
+                // Other 7 trigrams in a circle
+                allDirections.forEach((dir, idx) => {
+                    if (dir !== currentDirection) {
+                        // Calculate angle for circular arrangement
+                        // Offset by current direction so they're positioned naturally
+                        const relativeIdx = (idx - currentIndex + 8) % 8;
+                        const angle = (relativeIdx * Math.PI * 2 / 8) - Math.PI / 2; // Start from top
+                        
+                        positions[dir] = {
+                            x: centerX + Math.cos(angle) * radius,
+                            y: centerY + Math.sin(angle) * radius
+                        };
+                    }
+                });
+                
+                return positions;
+            }
             
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                // Update pulse alpha
-                pulseAlpha += pulseDirection * 0.02;
-                if (pulseAlpha >= 0.9 || pulseAlpha <= 0.3) {
-                    pulseDirection *= -1;
-                }
+                // Update pulse phase
+                pulsePhase += pulseSpeed;
                 
-                // Get element positions
-                const leftBtn = document.getElementById('leftBtn').getBoundingClientRect();
-                const rightBtn = document.getElementById('rightBtn').getBoundingClientRect();
-                const centerLabel = document.getElementById('directionLabel').getBoundingClientRect();
+                // Get current positions
+                const positions = getTrigramPositions();
+                const centerPos = positions[currentDirection];
                 
-                // Calculate connection points
-                const leftBtnCenter = leftBtn.left + leftBtn.width / 2;
-                const rightBtnCenter = rightBtn.left + rightBtn.width / 2;
-                const centerLabelCenter = centerLabel.left + centerLabel.width / 2;
-                const lineY = 60;
+                // Draw lines from center to all 7 other trigrams
+                allDirections.forEach((dir, idx) => {
+                    if (dir !== currentDirection) {
+                        const targetPos = positions[dir];
+                        
+                        // Calculate pulse alpha with phase offset for each line
+                        const phaseOffset = idx * Math.PI / 4;
+                        const pulse = Math.sin(pulsePhase + phaseOffset);
+                        const alpha = 0.3 + (pulse + 1) / 2 * 0.5; // Range: 0.3 to 0.8
+                        const lineWidth = 1 + (pulse + 1) / 2 * 1.5; // Range: 1 to 2.5
+                        
+                        // Draw connection line
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                        ctx.lineWidth = lineWidth;
+                        ctx.beginPath();
+                        ctx.moveTo(centerPos.x, centerPos.y);
+                        ctx.lineTo(targetPos.x, targetPos.y);
+                        ctx.stroke();
+                        
+                        // Draw endpoint glow
+                        const glowSize = 3 + pulse * 2;
+                        const gradient = ctx.createRadialGradient(
+                            targetPos.x, targetPos.y, 0,
+                            targetPos.x, targetPos.y, glowSize
+                        );
+                        gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.8})`);
+                        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(targetPos.x, targetPos.y, glowSize, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Draw small label for connected trigram
+                        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.7})`;
+                        ctx.font = '10px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        const shortName = trigrams[dir].name.replace('NORTH', 'N').replace('SOUTH', 'S').replace('EAST', 'E').replace('WEST', 'W');
+                        ctx.fillText(shortName, targetPos.x, targetPos.y - 12);
+                    }
+                });
                 
-                // Draw left connection (left button to center label)
-                ctx.strokeStyle = `rgba(255, 255, 255, ${pulseAlpha})`;
-                ctx.lineWidth = 2 + (pulseAlpha - 0.3);
+                // Draw center node (current trigram) with stronger glow
+                const centerPulse = Math.sin(pulsePhase * 1.5);
+                const centerAlpha = 0.6 + (centerPulse + 1) / 2 * 0.3;
+                const centerSize = 8 + centerPulse * 3;
+                
+                const centerGradient = ctx.createRadialGradient(
+                    centerPos.x, centerPos.y, 0,
+                    centerPos.x, centerPos.y, centerSize
+                );
+                centerGradient.addColorStop(0, `rgba(255, 255, 255, ${centerAlpha})`);
+                centerGradient.addColorStop(0.5, `rgba(255, 255, 255, ${centerAlpha * 0.5})`);
+                centerGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = centerGradient;
                 ctx.beginPath();
-                ctx.moveTo(leftBtnCenter + 30, lineY);
-                ctx.lineTo(centerLabelCenter - centerLabel.width / 2 - 10, lineY);
-                ctx.stroke();
-                
-                // Draw right connection (center label to right button)
-                ctx.beginPath();
-                ctx.moveTo(centerLabelCenter + centerLabel.width / 2 + 10, lineY);
-                ctx.lineTo(rightBtnCenter - 30, lineY);
-                ctx.stroke();
+                ctx.arc(centerPos.x, centerPos.y, centerSize, 0, Math.PI * 2);
+                ctx.fill();
                 
                 requestAnimationFrame(animate);
             }
@@ -430,8 +518,7 @@
             
             // Redraw on window resize
             window.addEventListener('resize', () => {
-                canvas.width = window.innerWidth;
-                canvas.height = 150;
+                resizeCanvas();
             });
         }
 
@@ -668,3 +755,5 @@
     </script>
 </body>
 </html>
+
+
