@@ -73,7 +73,7 @@
             top: 50%;
             left: 50%;
             transform-origin: center;
-            height: 2px;
+            height: 1px;
             background: linear-gradient(90deg, 
                 rgba(255, 255, 255, 0.6), 
                 transparent);
@@ -401,7 +401,7 @@
             // Set canvas size to match viewport
             function resizeCanvas() {
                 canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight * 0.35; // *35% change from 25% of viewport height
+                canvas.height = window.innerHeight * 0.25; // 25% of viewport height
             }
             resizeCanvas();
             
@@ -414,7 +414,7 @@
             function getTrigramPositions() {
                 const centerX = canvas.width / 2;
                 const centerY = canvas.height / 2;
-                const radius = Math.min(canvas.width, canvas.height) * 0.8.5;
+                const radius = Math.min(canvas.width, canvas.height) * 0.9;
                 
                 const positions = {};
                 const currentIndex = allDirections.indexOf(currentDirection);
